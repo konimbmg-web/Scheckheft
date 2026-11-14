@@ -2,7 +2,7 @@
    App-Shell im Cache, damit die App ohne Netz startet.
    Nach einer Änderung an index.html die VERSION hochzählen. */
 
-const VERSION = "golf5-v2";
+const VERSION = "golf5-v3";
 const SHELL = [
   "./",
   "./index.html",
