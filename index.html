@@ -1,0 +1,1229 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1b1d21">
+<meta name="description" content="Wartungsheft, Serviceintervalle und Kosten fuer den VW Golf V 1.9 TDI">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Scheckheft">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<style>
+  html{color-scheme:dark;background:#141518}
+  :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+  html,body{min-height:100%}
+  img{max-width:100%}
+  [hidden]{display:none!important}
+</style>
+<title>Golf V Scheckheft</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&family=Roboto+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: fixed instrument bar on top, thumb-reached tab bar at the bottom, one scrolling column between.
+   Single dark theme by intent — the page is the Golf's own cluster, lit the way a cluster is lit at night. */
+:root{
+  color-scheme: dark;
+
+  /* Color — anthracite dash, MFA blue readout, VW warning red */
+  --dash:#141518;
+  --dash-2:#1b1d21;
+  --dash-3:#24262b;
+  --line:#32353b;
+  --line-soft:#282a2f;
+  --ink:#eae8e3;
+  --ink-dim:#9d9fa5;
+  --ink-faint:#6c6f76;
+  --red:#c8102e;
+  --red-lit:#ff455b;
+  --amber:#e8a33d;
+  --mfa:#86b9da;
+  --ok:#5f9e6e;
+  --paper:#eae4d7;
+  --paper-2:#ded7c6;
+  --paper-ink:#2a2722;
+  --paper-line:#c2baa6;
+  --paper-stamp:#8d3b48;
+
+  /* Type — Barlow Condensed for the stencilled labels, Barlow for text, mono for every reading */
+  --f-lbl:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-num:"Roboto Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{
+  margin:0;background:var(--dash);color:var(--ink);
+  font-family:var(--f-body);font-size:15px;line-height:1.5;
+  -webkit-font-smoothing:antialiased;overscroll-behavior-y:none;
+}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:40;background:var(--dash-2)}
+
+.lbl{font-family:var(--f-lbl);text-transform:uppercase;letter-spacing:.14em;font-size:12px;color:var(--ink-faint);font-weight:700}
+.num{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+h1,h2,h3,h4{margin:0;font-weight:600}
+button{font:inherit;color:inherit}
+
+/* ---------- top instrument bar ---------- */
+.topbar{
+  position:sticky;top:env(safe-area-inset-top,0px);z-index:30;
+  background:var(--dash-2);border-bottom:1px solid var(--line);
+  padding-block:9px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+  display:flex;align-items:center;gap:12px;
+}
+.topbar .who{min-width:0;flex:1}
+.topbar .who b{display:block;font-family:var(--f-lbl);font-size:19px;letter-spacing:.04em;text-transform:uppercase;font-weight:700;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar .who span{display:block;font-size:12px;color:var(--ink-faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.odo{
+  background:#0b1014;border:1px solid #1c2a33;border-radius:5px;padding:5px 10px;text-align:right;
+  box-shadow:0 0 18px rgba(134,185,218,.09) inset;flex:none;
+}
+.odo b{display:block;font-family:var(--f-num);font-size:17px;color:var(--mfa);line-height:1.15;text-shadow:0 0 10px rgba(134,185,218,.35)}
+.odo span{display:block;font-family:var(--f-lbl);text-transform:uppercase;letter-spacing:.14em;font-size:9.5px;color:#54788c}
+.iconbtn{
+  flex:none;width:40px;height:40px;display:grid;place-items:center;
+  background:var(--dash-3);border:1px solid var(--line);border-radius:9px;cursor:pointer;
+}
+.iconbtn:active{background:#2d3036}
+.iconbtn svg{width:19px;height:19px;stroke:var(--ink);fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.iconbtn.add{background:var(--red);border-color:#9d0c24}
+.iconbtn.add svg{stroke:#fff}
+
+/* ---------- page column ---------- */
+main{
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:16px 0;
+  max-width:720px;margin:0 auto;
+  padding-bottom:calc(84px + env(safe-area-inset-bottom,0px));
+}
+
+/* ---------- bottom tab bar ---------- */
+.tabbar{
+  position:fixed;left:0;right:0;bottom:0;z-index:35;
+  background:rgba(20,21,24,.94);backdrop-filter:blur(14px);
+  border-top:1px solid var(--line);
+  display:grid;grid-template-columns:repeat(5,1fr);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  padding-left:max(4px,env(safe-area-inset-left,0px));
+  padding-right:max(4px,env(safe-area-inset-right,0px));
+}
+.tabbar button{
+  background:none;border:0;padding:8px 2px 9px;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;gap:3px;min-height:52px;justify-content:center;
+}
+.tabbar svg{width:21px;height:21px;stroke:var(--ink-faint);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tabbar em{font-family:var(--f-lbl);font-style:normal;text-transform:uppercase;letter-spacing:.08em;font-size:10.5px;color:var(--ink-faint);font-weight:600}
+.tabbar button[aria-selected=true] svg{stroke:var(--red-lit)}
+.tabbar button[aria-selected=true] em{color:var(--ink)}
+.tabbar button:focus-visible{outline:2px solid var(--mfa);outline-offset:-3px;border-radius:8px}
+.tabbar .pip{position:absolute;margin:-26px 0 0 17px;min-width:16px;height:16px;border-radius:9px;background:var(--red);
+  color:#fff;font-family:var(--f-num);font-size:10px;line-height:16px;text-align:center;padding:0 4px}
+
+/* ---------- panels & rows ---------- */
+.panel{border:1px solid var(--line);border-radius:12px;background:var(--dash-2);padding:14px 15px;margin-bottom:12px}
+.panel > .lbl:first-child{display:block;margin-bottom:10px}
+.stack{display:flex;flex-direction:column;gap:12px}
+
+.row{display:grid;grid-template-columns:12px 1fr;gap:11px;align-items:start;padding:11px 0;border-bottom:1px solid var(--line-soft)}
+.row:last-child{border-bottom:0}
+.row:first-child{padding-top:0}
+.dot{width:9px;height:9px;border-radius:50%;margin-top:6px;justify-self:center;flex:none}
+.dot.red{background:var(--red);box-shadow:0 0 9px var(--red-lit)}
+.dot.amber{background:var(--amber);box-shadow:0 0 8px rgba(232,163,61,.5)}
+.dot.ok{background:var(--ok)}
+.dot.grey{background:#4a4d54}
+.rname{font-size:15px;font-weight:500;line-height:1.3}
+.rmeta{font-size:12.5px;color:var(--ink-faint);margin-top:3px}
+.rval{font-family:var(--f-num);font-variant-numeric:tabular-nums;font-size:13px;margin-top:5px}
+.rval.red{color:var(--red-lit)} .rval.amber{color:var(--amber)} .rval.ok{color:var(--ok)} .rval.grey{color:var(--ink-faint)}
+.rval i{font-style:normal;color:var(--ink-faint)}
+.bar{height:3px;background:var(--line-soft);border-radius:2px;overflow:hidden;margin-top:7px}
+.bar i{display:block;height:100%;border-radius:2px}
+
+/* ---------- buttons ---------- */
+.btn{
+  font-family:var(--f-lbl);text-transform:uppercase;letter-spacing:.1em;font-size:13px;font-weight:700;
+  background:var(--dash-3);border:1px solid var(--line);border-radius:9px;
+  padding:11px 15px;cursor:pointer;min-height:44px;display:inline-flex;align-items:center;justify-content:center;gap:7px;
+}
+.btn:active{background:#2e3137}
+.btn.primary{background:var(--red);border-color:#9d0c24;color:#fff}
+.btn.ghost{background:transparent}
+.btn.danger{background:transparent;border-color:#6d2130;color:var(--red-lit)}
+.btn.sm{min-height:36px;padding:7px 11px;font-size:11.5px;border-radius:7px}
+.btn.wide{width:100%}
+.btn:focus-visible{outline:2px solid var(--mfa);outline-offset:2px}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap}
+
+/* ---------- forms ---------- */
+label.f{display:block}
+label.f > span{display:block;font-family:var(--f-lbl);text-transform:uppercase;letter-spacing:.12em;font-size:11.5px;color:var(--ink-faint);font-weight:700;margin-bottom:5px}
+input,select,textarea{
+  width:100%;background:#0e0f12;border:1px solid var(--line);color:var(--ink);
+  border-radius:9px;padding:11px 12px;font-family:var(--f-body);font-size:16px;min-height:46px;
+}
+input.n,select.n{font-family:var(--f-num)}
+textarea{min-height:76px;resize:vertical;line-height:1.45}
+input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--mfa);outline-offset:1px}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:22px;
+  padding:9px 13px;font-size:14px;color:var(--ink-dim);background:#0e0f12;cursor:pointer;min-height:40px}
+.chip input{width:auto;min-height:0;margin:0;accent-color:var(--red)}
+.chip:has(input:checked){border-color:var(--red);color:var(--ink);background:rgba(200,16,46,.13)}
+
+/* ---------- gauge ---------- */
+.gaugewrap{display:flex;flex-direction:column;align-items:center;gap:2px}
+.gaugewrap svg{width:min(230px,62vw);height:auto}
+.gcap{text-align:center}
+.gcap b{display:block;font-family:var(--f-lbl);text-transform:uppercase;letter-spacing:.07em;font-size:15px;font-weight:700}
+.gcap span{display:block;font-size:12.5px;color:var(--ink-faint);margin-top:2px}
+
+/* ---------- KPI ---------- */
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.kpi{border:1px solid var(--line);border-radius:11px;padding:11px 12px;background:var(--dash-2);min-width:0}
+.kpi b{display:block;font-family:var(--f-num);font-size:18px;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi span{display:block;font-size:11px;color:var(--ink-faint);margin-top:2px}
+
+/* ---------- Scheckheft paper ---------- */
+.paper{background:linear-gradient(180deg,var(--paper),var(--paper-2));color:var(--paper-ink);
+  border:1px solid #b5ac97;border-radius:11px;padding:13px 14px;margin-bottom:10px;box-shadow:0 5px 14px rgba(0,0,0,.34)}
+.paper .ph{display:flex;gap:12px;align-items:flex-start}
+.stamp{flex:none;border:1.5px solid var(--paper-stamp);color:var(--paper-stamp);border-radius:5px;
+  padding:5px 7px;text-align:center;transform:rotate(-2.5deg)}
+.stamp b{display:block;font-family:var(--f-num);font-size:12.5px;font-weight:500}
+.stamp span{display:block;font-family:var(--f-lbl);text-transform:uppercase;font-size:10px;letter-spacing:.06em;margin-top:1px}
+.paper h4{font-size:16px;font-family:var(--f-body);line-height:1.25;min-width:0}
+.paper .sub{font-size:12.5px;color:#6d675b;margin-top:2px}
+.paper .note{font-size:13.5px;color:#4e4940;margin-top:7px;white-space:pre-wrap}
+.paper .cost{margin-left:auto;text-align:right;flex:none;font-family:var(--f-num);font-size:16px}
+.paper .cost span{display:block;font-family:var(--f-body);font-size:11px;color:#6d675b}
+.ptags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.ptag{font-family:var(--f-lbl);text-transform:uppercase;letter-spacing:.07em;font-size:10.5px;font-weight:600;
+  border:1px solid var(--paper-line);border-radius:4px;padding:2px 7px;color:#5c574c}
+.paper .pacts{display:flex;gap:7px;margin-top:10px}
+.paper .pacts button{background:transparent;border:1px solid var(--paper-line);color:#5c574c;
+  border-radius:7px;padding:7px 11px;font-family:var(--f-lbl);text-transform:uppercase;letter-spacing:.09em;
+  font-size:11.5px;font-weight:700;cursor:pointer;min-height:36px}
+.paper .pacts button.del{color:var(--paper-stamp);border-color:#c5a3a9}
+
+/* ---------- weak points ---------- */
+.wp{border:1px solid var(--line);border-radius:11px;padding:13px 14px;margin-bottom:10px;background:var(--dash-2)}
+.wp .wh{display:flex;gap:10px;align-items:flex-start;justify-content:space-between}
+.wp h4{font-size:15.5px;line-height:1.25}
+.wp .sym{font-size:13px;color:var(--ink-dim);margin-top:6px}
+.wp .hint{font-size:12.5px;color:var(--ink-faint);margin-top:5px}
+.sev{flex:none;font-family:var(--f-lbl);text-transform:uppercase;letter-spacing:.09em;font-size:10.5px;font-weight:700;
+  padding:3px 7px;border-radius:4px;white-space:nowrap}
+.sev.s3{background:rgba(200,16,46,.16);color:#ff6b7d;border:1px solid rgba(200,16,46,.42)}
+.sev.s2{background:rgba(232,163,61,.13);color:var(--amber);border:1px solid rgba(232,163,61,.36)}
+.sev.s1{background:var(--dash-3);color:var(--ink-faint);border:1px solid var(--line)}
+
+/* ---------- cost bars ---------- */
+.cbar{display:grid;grid-template-columns:1fr auto;gap:4px 10px;padding:8px 0;font-size:14px;align-items:baseline}
+.cbar .n{font-family:var(--f-num);font-size:13.5px;text-align:right}
+.cbar .t{grid-column:1/-1;height:7px;background:var(--dash-3);border-radius:4px;overflow:hidden}
+.cbar .t i{display:block;height:100%;background:linear-gradient(90deg,#78101f,var(--red))}
+
+/* ---------- specs ---------- */
+table.specs{width:100%;border-collapse:collapse;font-size:14px}
+table.specs td{padding:9px 0;border-bottom:1px solid var(--line-soft);vertical-align:top}
+table.specs tr:last-child td{border-bottom:0}
+table.specs td:first-child{color:var(--ink-faint);padding-right:12px}
+table.specs td:last-child{font-family:var(--f-num);font-size:13px;text-align:right;white-space:normal}
+
+/* ---------- sheet (bottom modal) ---------- */
+.scrim{position:fixed;inset:0;background:rgba(5,6,8,.72);z-index:50;opacity:0;pointer-events:none;transition:opacity .2s}
+.scrim.open{opacity:1;pointer-events:auto}
+.sheet{
+  position:fixed;left:0;right:0;bottom:0;z-index:51;
+  background:var(--dash-2);border-top:1px solid var(--line);
+  border-radius:18px 18px 0 0;max-height:92vh;overflow-y:auto;
+  transform:translateY(102%);transition:transform .26s cubic-bezier(.32,.72,0,1);
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-bottom:calc(18px + env(safe-area-inset-bottom,0px));
+  -webkit-overflow-scrolling:touch;
+}
+.sheet.open{transform:translateY(0)}
+.grab{width:38px;height:4px;border-radius:3px;background:var(--line);margin:10px auto 2px}
+.sheet h3{font-family:var(--f-lbl);text-transform:uppercase;letter-spacing:.12em;font-size:14px;color:var(--ink);padding:8px 0 14px}
+.sheet .stack{gap:13px}
+.sheet .foot{display:flex;gap:9px;padding-top:16px}
+.sheet .foot .btn{flex:1}
+@media (prefers-reduced-motion:reduce){.sheet,.scrim{transition:none}}
+
+/* ---------- Service-Auswahl im Eintrag ---------- */
+.svbox{border:1px solid var(--line);border-radius:12px;padding:13px 13px 12px;background:#111216}
+.svhead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
+.prev{margin-top:12px;border-top:1px solid var(--line-soft);padding-top:11px;display:flex;flex-direction:column;gap:8px}
+.prow{display:flex;flex-direction:column;gap:2px;border-left:2px solid var(--ok);padding-left:10px}
+.prow b{font-size:13.5px;font-weight:600;line-height:1.3}
+.prow span{font-family:var(--f-num);font-size:12.5px;color:var(--ok)}
+.prow.none{border-left-color:var(--line);color:var(--ink-faint);font-size:12.5px;padding:2px 0 2px 10px}
+.chips.clip{max-height:122px;overflow:hidden;-webkit-mask-image:linear-gradient(#000 70%,transparent);mask-image:linear-gradient(#000 70%,transparent)}
+
+/* ---------- Marke ---------- */
+.mark{flex:none;width:30px;height:30px}
+.mark svg{display:block;width:30px;height:30px}
+
+.hint{font-size:12.5px;color:var(--ink-faint);line-height:1.5}
+.empty{text-align:center;padding:30px 18px;color:var(--ink-faint);font-size:14px;border:1px dashed var(--line);border-radius:11px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));
+  background:var(--dash-3);border:1px solid var(--line);padding:11px 18px;border-radius:10px;font-size:14px;
+  opacity:0;pointer-events:none;transition:opacity .22s;z-index:60;max-width:90vw;text-align:center}
+.toast.show{opacity:1}
+.secthead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:4px 0 11px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="mark" aria-hidden="true">
+    <svg viewBox="0 0 40 40">
+      <rect x="0.5" y="0.5" width="39" height="39" rx="9" fill="#1b1d21" stroke="#32353b"/>
+      <path d="M8.6 27.4a13 13 0 1 1 22.8 0" fill="none" stroke="#34373e" stroke-width="3.1" stroke-linecap="round"/>
+      <path d="M27.6 10.6a13 13 0 0 1 3.8 16.8" fill="none" stroke="#c8102e" stroke-width="3.1" stroke-linecap="round"/>
+      <path d="M20 21.5 26.2 14" fill="none" stroke="#eae8e3" stroke-width="2.6" stroke-linecap="round"/>
+      <circle cx="20" cy="22.2" r="2.5" fill="#eae8e3"/>
+    </svg>
+  </div>
+  <div class="who"><b id="hName">Golf V</b><span id="hSub">—</span></div>
+  <button class="odo" id="odoBtn" type="button" aria-label="Kilometerstand aktualisieren">
+    <b id="hKm">0</b><span>km</span>
+  </button>
+  <button class="iconbtn add" id="addBtn" type="button" aria-label="Eintrag hinzufügen">
+    <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+  </button>
+</div>
+
+<main>
+  <section id="v-dash"></section>
+  <section id="v-log" hidden></section>
+  <section id="v-plan" hidden></section>
+  <section id="v-weak" hidden></section>
+  <section id="v-cost" hidden></section>
+  <section id="v-veh" hidden></section>
+</main>
+
+<nav class="tabbar" role="tablist" id="tabbar">
+  <button role="tab" data-v="dash" aria-selected="true">
+    <svg viewBox="0 0 24 24"><path d="M3 14a9 9 0 0 1 18 0"/><path d="M12 14l4.5-4"/><circle cx="12" cy="14" r="1.6"/><path d="M3 14v3h18v-3"/></svg><em>Kombi</em></button>
+  <button role="tab" data-v="log" aria-selected="false">
+    <svg viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M8 10h8M8 14h8M8 18h5"/></svg><em>Heft</em></button>
+  <button role="tab" data-v="plan" aria-selected="false">
+    <svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M8 3v4M16 3v4M3.5 10h17"/><path d="M9 14.5l2 2 4-4"/></svg><em>Plan</em></button>
+  <button role="tab" data-v="weak" aria-selected="false">
+    <svg viewBox="0 0 24 24"><path d="M12 3l8 4v6c0 4.4-3.3 7.3-8 8-4.7-.7-8-3.6-8-8V7z"/><path d="M12 9v4M12 16.2v.1"/></svg><em>Teile</em></button>
+  <button role="tab" data-v="cost" aria-selected="false">
+    <svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg><em>Kosten</em></button>
+</nav>
+
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true"></div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+"use strict";
+
+/* ======================= Fahrzeug- und Wartungswissen ======================= */
+
+const ENGINES={
+  BXE:{ps:105,kw:77,nm:250,dpf:false,years:"2005–2008"},
+  BKC:{ps:105,kw:77,nm:250,dpf:false,years:"2003–2006"},
+  BLS:{ps:105,kw:77,nm:250,dpf:true ,years:"2005–2009"},
+  BJB:{ps:105,kw:77,nm:250,dpf:false,years:"2003–2006"},
+  BRU:{ps:90 ,kw:66,nm:210,dpf:false,years:"2005–2008"},
+  BXF:{ps:90 ,kw:66,nm:210,dpf:false,years:"2005–2008"}
+};
+
+const SERVICES=[
+ {id:"oil",n:"Motoröl + Ölfilter",km:15000,mo:12,cat:"Motor",
+  note:"PD-TDI braucht zwingend VW 505.01 (ohne DPF) bzw. 507.00 (mit DPF). Falsches Öl frisst die Nockenwelle. Rund 4,3 l inklusive Filter."},
+ {id:"belt",n:"Zahnriemen + Spannrolle + Wasserpumpe",km:120000,mo:72,cat:"Motor",
+  note:"Der wichtigste Posten am 1.9 PD. Riemenriss bedeutet kapitalen Motorschaden. Wasserpumpe, Spann- und Umlenkrolle immer mitmachen."},
+ {id:"auxbelt",n:"Keilrippenriemen",km:90000,mo:72,cat:"Motor"},
+ {id:"fuelfilter",n:"Kraftstofffilter",km:60000,mo:48,cat:"Kraftstoff",
+  note:"Am besten vor dem Winter. Ein zugesetzter Filter macht Leistungsverlust und Startprobleme."},
+ {id:"airfilter",n:"Luftfilter",km:60000,mo:48,cat:"Motor"},
+ {id:"cabin",n:"Innenraumfilter",km:30000,mo:12,cat:"Innenraum"},
+ {id:"brakefluid",n:"Bremsflüssigkeit wechseln",km:null,mo:24,cat:"Bremse",
+  note:"Alle zwei Jahre, unabhängig von der Laufleistung. Wird bei der HU geprüft."},
+ {id:"padsF",n:"Bremsbeläge vorn",km:45000,mo:null,cat:"Bremse"},
+ {id:"discF",n:"Bremsscheiben vorn",km:90000,mo:null,cat:"Bremse"},
+ {id:"padsR",n:"Bremsbeläge hinten",km:70000,mo:null,cat:"Bremse"},
+ {id:"gearoil",n:"Getriebeöl Schaltgetriebe",km:120000,mo:null,cat:"Antrieb",
+  note:"Ab Werk als Lebensdauerfüllung deklariert. In der Praxis lohnt der Wechsel für Schaltbarkeit und Lagerlebensdauer."},
+ {id:"coolant",n:"Kühlmittel G12++ prüfen",km:null,mo:60,cat:"Motor"},
+ {id:"glow",n:"Glühkerzen prüfen",km:100000,mo:null,cat:"Motor"},
+ {id:"egr",n:"AGR-Ventil + Ansaugbrücke reinigen",km:100000,mo:null,cat:"Motor",
+  note:"Klassiker beim PD-TDI. Verkokung führt zu Notlauf und Leistungsloch."},
+ {id:"dpf",n:"DPF: Beladung und Aschemasse auslesen",km:30000,mo:12,cat:"Abgas",dpfOnly:true},
+ {id:"hu",n:"HU / AU (TÜV)",km:null,mo:24,cat:"Prüfung"},
+ {id:"inspect",n:"Inspektion",km:30000,mo:24,cat:"Prüfung"},
+ {id:"battery",n:"Batterie testen",km:null,mo:60,cat:"Elektrik"},
+ {id:"tires",n:"Reifen: Profil und DOT-Alter",km:null,mo:12,cat:"Fahrwerk",
+  note:"Ab sechs Jahren härtet die Mischung aus, unter 4 mm Profil wird es im Winter kritisch."},
+ {id:"wheels",n:"Räderwechsel Sommer/Winter",km:null,mo:6,cat:"Fahrwerk"},
+ {id:"chassis",n:"Fahrwerk prüfen: Querlenker, Koppelstangen, Manschetten",km:30000,mo:12,cat:"Fahrwerk"},
+ {id:"rust",n:"Unterboden und Bremsleitungen auf Rost",km:null,mo:12,cat:"Karosserie",
+  note:"Beim Golf V der häufigste HU-Killer. Bremsleitungen über der Hinterachse und den Achskörper genau ansehen."},
+ {id:"drains",n:"Wasserkasten-Abläufe reinigen",km:null,mo:12,cat:"Karosserie",
+  note:"Verstopft stehen die Steuergeräte im Wasser. Fünf Minuten Arbeit, vierstellige Folgekosten."},
+ {id:"ac",n:"Klimaanlage: Service und Trockner",km:null,mo:24,cat:"Komfort"},
+ {id:"wiper",n:"Wischerblätter",km:null,mo:12,cat:"Komfort"}
+];
+
+const WEAKPOINTS=[
+ {id:"w-belt",n:"Zahnriemen und Wasserpumpe",sev:3,
+  sym:"Quietschen im Kaltstart, Kühlmittelverlust, Risse an der Riemenflanke.",
+  hint:"Spätestens 120.000 km oder sechs Jahre. Bei unbekannter Historie sofort erneuern. Richtwert 450–700 € komplett."},
+ {id:"w-egr",n:"AGR-Ventil und Ansaugbrücke",sev:3,
+  sym:"Notlauf, Leistungsloch ab 2000 Umdrehungen, Fehler Ladedruckregelgrenze, schwarzer Rauch.",
+  hint:"Alle rund 100.000 km reinigen. Ventil 120–250 €, die Reinigung in Eigenregie kostet fast nichts."},
+ {id:"w-turbo",n:"Turbolader, VTG-Verstellung",sev:3,
+  sym:"Notlauf unter Last, Pfeifen, Ladedruckfehler im Speicher.",
+  hint:"Früh gangbar machen, sonst Lader für 500–900 €. Regelmäßige Autobahnfahrten helfen."},
+ {id:"w-injseal",n:"Pumpe-Düse-Elemente und Dichtringe",sev:3,
+  sym:"Nageln, Rußfahne am Zylinderkopf, steigender Ölstand.",
+  hint:"Steigender Ölstand heißt Kraftstoff im Öl. Das ist ein Alarmzeichen, der Motor kann durchgehen."},
+ {id:"w-water",n:"Wassereinbruch im Steuergerätekasten",sev:3,
+  sym:"Elektrikspuk, Airbag- und ABS-Leuchten, feuchter Fußraum auf der Beifahrerseite.",
+  hint:"Abläufe jährlich freimachen. Ein nasses Motorsteuergerät kostet vierstellig."},
+ {id:"w-rust",n:"Rost an Bremsleitungen, Achse, Unterboden",sev:3,
+  sym:"Blätternde Leitungen, HU-Mängel, Rostnester an Kanten und Radläufen.",
+  hint:"Jährlich prüfen. Ein Bremsleitungssatz kostet 250–500 €, Konservierung im Herbst spart das."},
+ {id:"w-tandem",n:"Tandempumpe",sev:2,
+  sym:"Öl im Kraftstofffilter, schlechter Startlauf, schwacher Bremskraftverstärker.",
+  hint:"Dichtsatz 30–60 €, komplette Pumpe 180–300 €."},
+ {id:"w-arms",n:"Querlenkerlager und Koppelstangen",sev:2,
+  sym:"Poltern über Querfugen, schwammige Lenkung, ungleicher Reifenverschleiß.",
+  hint:"Koppelstangen 30–70 € je Seite, Querlenker 80–160 € je Seite inklusive Spur."},
+ {id:"w-dampers",n:"Domlager und Stoßdämpfer",sev:2,
+  sym:"Knacken beim Lenken im Stand, Nachwippen, starkes Bremsnicken.",
+  hint:"Ab etwa 150.000 km typisch. Immer achsweise wechseln."},
+ {id:"w-dmf",n:"Zweimassenschwungrad und Kupplung",sev:2,
+  sym:"Rasseln im Leerlauf, Vibration beim Anfahren, Rupfen.",
+  hint:"Der teuerste Verschleißposten nach dem Motor: 900–1400 € in der Werkstatt."},
+ {id:"w-shafts",n:"Achsmanschetten und Antriebswellen",sev:2,
+  sym:"Fett am Radlauf, Klacken beim Einlenken.",
+  hint:"Manschette früh wechseln, sonst stirbt das Gelenk mit."},
+ {id:"w-bearing",n:"Radlager",sev:2,
+  sym:"Brummen, das sich mit der Geschwindigkeit ändert und beim Lenken wandert.",
+  hint:"120–250 € je Rad inklusive Einbau."},
+ {id:"w-charge",n:"Ladeluftschläuche und Schellen",sev:2,
+  sym:"Leistungsverlust unter Last, Ölnebel an den Verbindungen, Ladedruckfehler.",
+  hint:"Schläuche 20–60 €. Oft die günstige Ursache hinter einem vermeintlichen Turboschaden."},
+ {id:"w-flange",n:"Kühlmittelflansch und Thermostat",sev:2,
+  sym:"Kühlmittelverlust ohne Pfütze, Heizung wird nicht warm, schwankende Temperatur.",
+  hint:"Flansch 25–60 €, Thermostat 30–70 €."},
+ {id:"w-exhaust",n:"Krümmer und Flexrohr",sev:2,
+  sym:"Blubbern beim Gasgeben, Abgasgeruch im Innenraum.",
+  hint:"Flexrohr einschweißen 80–200 €."},
+ {id:"w-alt",n:"Lichtmaschine und Freilaufriemenscheibe",sev:2,
+  sym:"Rasseln im Leerlauf, flackerndes Licht, Batteriewarnleuchte.",
+  hint:"Freilauf allein 40–90 €, Lichtmaschine 250–450 €."},
+ {id:"w-dpf",n:"Dieselpartikelfilter",sev:2,dpfOnly:true,
+  sym:"Häufige Regeneration, steigender Ölstand, DPF-Warnleuchte.",
+  hint:"Aschemasse per Diagnose auslesen. Tausch 400–900 €."},
+ {id:"w-cond",n:"Klimakondensator",sev:1,
+  sym:"Klima kühlt nicht mehr, Kältemittel weg ohne sichtbaren Defekt.",
+  hint:"Steinschlag im Kühlerpaket. Kondensator 90–200 € plus Befüllung."},
+ {id:"w-lock",n:"ZV-Pumpe und Türschlösser",sev:1,
+  sym:"Zentralverriegelung öffnet nur teilweise, Pumpe läuft dauernd, Batterie leer.",
+  hint:"Pumpe sitzt im Kofferraum rechts. 60–150 €."},
+ {id:"w-window",n:"Fensterheber-Clips",sev:1,
+  sym:"Scheibe rutscht ab oder klemmt, Knacken beim Öffnen.",
+  hint:"Reparatursatz oft unter 20 €."},
+ {id:"w-blower",n:"Gebläsewiderstand",sev:1,
+  sym:"Lüftung läuft nur auf Stufe 4.",
+  hint:"20–50 €, gut selbst zu machen."},
+ {id:"w-glow",n:"Glühkerzen und Glühzeitsteuergerät",sev:1,
+  sym:"Schwerer Kaltstart, Ruckeln beim Warmlaufen, blinkende Vorglühlampe.",
+  hint:"Satz Kerzen 40–90 €. Bei Bruchgefahr warm ausbauen."}
+];
+
+const CATS=["Wartung","Reparatur","Verschleißteile","Prüfung/HU","Betriebsstoffe","Reifen","Zubehör","Sonstiges"];
+
+const DEFAULT={
+  vehicle:{name:"VW Golf V 1.9 TDI",plate:"",vin:"",engine:"BXE",firstReg:"2006-05",
+           km:210000,kmDate:"",annualKm:15000,gearbox:"5-Gang Schaltgetriebe",color:"",
+           buyDate:"",buyKm:0,buyPrice:0},
+  baselines:{},entries:[],weak:{},custom:[],_ts:0
+};
+
+/* ======================= Speicher ======================= */
+
+const LS="golf5-scheckheft";
+let S=structuredClone(DEFAULT);
+let warnedStore=false;
+
+function readLocal(){
+  try{ const r=localStorage.getItem(LS); return r?JSON.parse(r):null; }catch(e){ return null; }
+}
+async function readCloud(){
+  try{ const r=await window.storage.get(LS); return r&&r.value?JSON.parse(r.value):null; }catch(e){ return null; }
+}
+async function load(){
+  const a=readLocal();
+  const b=(typeof window.storage!=="undefined")?await readCloud():null;
+  const pick=(!a&&!b)?null:(!b?a:(!a?b:((a._ts||0)>=(b._ts||0)?a:b)));
+  if(pick) S=Object.assign(structuredClone(DEFAULT),pick);
+  if(!S.vehicle.kmDate) S.vehicle.kmDate=todayISO();
+}
+let t_save=null;
+function save(){
+  S._ts=Date.now();
+  const json=JSON.stringify(S);
+  try{ localStorage.setItem(LS,json); }
+  catch(e){ if(!warnedStore){ warnedStore=true; toast("Speichern auf diesem Gerät nicht möglich. Sichere deine Daten über Export."); } }
+  clearTimeout(t_save);
+  t_save=setTimeout(()=>{ try{ window.storage.set(LS,json); }catch(e){} },500);
+}
+
+/* ======================= Helfer ======================= */
+
+const $=(s,r=document)=>r.querySelector(s);
+function todayISO(){ const d=new Date(); return new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10); }
+function el(t,c,h){ const e=document.createElement(t); if(c)e.className=c; if(h!==undefined)e.innerHTML=h; return e; }
+function esc(s){ return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m])); }
+function nf(n){ return new Intl.NumberFormat("de-DE").format(Math.round(n||0)); }
+function eur(n){ return new Intl.NumberFormat("de-DE",{style:"currency",currency:"EUR",maximumFractionDigits:0}).format(n||0); }
+function dfmt(d){ if(!d)return "—"; const p=d.split("-"); return p.length>=3?`${p[2]}.${p[1]}.${p[0]}`:`${p[1]}/${p[0]}`; }
+function addMonths(iso,m){
+  const d=new Date(iso+"T12:00:00"),day=d.getDate();
+  d.setDate(1); d.setMonth(d.getMonth()+m);
+  d.setDate(Math.min(day,new Date(d.getFullYear(),d.getMonth()+1,0).getDate()));
+  return d.toISOString().slice(0,10);
+}
+function daysBetween(a,b){ return Math.round((new Date(b+"T12:00:00")-new Date(a+"T12:00:00"))/864e5); }
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+function toast(m){ const t=$("#toast"); t.textContent=m; t.classList.add("show"); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove("show"),2600); }
+
+function currentKm(){
+  const top=S.entries.reduce((m,e)=>Math.max(m,+e.km||0),0);
+  return Math.max(+S.vehicle.km||0,top);
+}
+function hasDPF(){ return !!(ENGINES[S.vehicle.engine]||{}).dpf; }
+function allServices(){ return SERVICES.filter(s=>!s.dpfOnly||hasDPF()).concat(S.custom||[]); }
+function svName(id){ const s=allServices().find(x=>x.id===id); return s?s.n:null; }
+function ageYears(){ const f=S.vehicle.firstReg; if(!f)return null; return (Date.now()-new Date(f+"-15T12:00:00"))/(365.25*864e5); }
+function total(e){ return (+e.costParts||0)+(+e.costLabor||0); }
+
+function status(sv){
+  const km=currentKm();
+  const hits=S.entries.filter(e=>(e.services||[]).includes(sv.id))
+                      .sort((a,b)=>(b.km-a.km)||String(b.date).localeCompare(a.date));
+  let last=null;
+  if(hits[0]) last={km:+hits[0].km,date:hits[0].date};
+  const base=S.baselines[sv.id];
+  if(base&&(!last||(+base.km||0)>last.km)) last={km:+base.km||0,date:base.date};
+  if(!last) return {sv,known:false,state:"grey",pct:0,daysLeft:null,label:"kein Stand",sub:"Stand eintragen"};
+
+  const annual=Math.max(1000,+S.vehicle.annualKm||15000);
+  let dKm=null,dDays=null,pKm=0,pT=0;
+  if(sv.km){ dKm=last.km+sv.km-km; pKm=(km-last.km)/sv.km; }
+  if(sv.mo&&last.date){ dDays=daysBetween(todayISO(),addMonths(last.date,sv.mo)); pT=1-dDays/(sv.mo*30.44); }
+
+  const fromKm=dKm===null?Infinity:dKm/annual*365;
+  const daysLeft=Math.min(fromKm,dDays===null?Infinity:dDays);
+  const pct=Math.max(pKm,pT);
+
+  let state="ok";
+  if(daysLeft<0||pct>=1) state="red";
+  else if(daysLeft<60||pct>=.85) state="amber";
+
+  // Die bindende Grenze zuerst nennen: was früher greift, steht vorn.
+  const kmPart=dKm===null?null:(dKm>=0?`noch ${nf(dKm)} km`:`${nf(-dKm)} km über`);
+  const tPart=dDays===null?null:(dDays>=0?`noch ${Math.round(dDays)} Tage`:`${Math.round(-dDays)} Tage über`);
+  const parts=(fromKm<=(dDays===null?Infinity:dDays)?[kmPart,tPart]:[tPart,kmPart]).filter(Boolean);
+  return {sv,known:true,state,pct,daysLeft,label:parts[0]||"—",sub:parts[1]||"",last};
+}
+function statuses(){
+  const w={red:0,amber:1,ok:2,grey:3};
+  return allServices().map(status).sort((a,b)=>(w[a.state]-w[b.state])||((a.daysLeft??1e9)-(b.daysLeft??1e9)));
+}
+
+/* ======================= Kopf ======================= */
+
+function renderTop(){
+  const v=S.vehicle,e=ENGINES[v.engine]||{};
+  $("#hName").textContent=v.name||"Golf V";
+  $("#hSub").textContent=[v.engine&&"Motor "+v.engine,e.kw&&`${e.kw} kW`,v.firstReg&&"EZ "+dfmt(v.firstReg),v.plate].filter(Boolean).join(" · ");
+  $("#hKm").textContent=nf(currentKm());
+  const st=statuses(),red=st.filter(s=>s.state==="red").length;
+  const bar=$("#tabbar");
+  bar.querySelectorAll(".pip").forEach(p=>p.remove());
+  if(red){
+    const b=bar.querySelector('[data-v="plan"]');
+    const pip=el("span","pip",String(red)); b.prepend(pip);
+  }
+}
+
+/* ======================= Kombi ======================= */
+
+function renderDash(){
+  const c=$("#v-dash"); c.innerHTML="";
+  const st=statuses();
+  const lead=st.find(s=>s.known)||st[0];
+
+  const p=el("div","panel");
+  p.appendChild(el("div","lbl","Nächste Fälligkeit"));
+  p.appendChild(gauge(lead));
+  c.appendChild(p);
+
+  const open=st.filter(s=>s.state==="red"||s.state==="amber");
+  const p2=el("div","panel");
+  const h=el("div","secthead");
+  h.appendChild(el("div","lbl",open.length?`Offen (${open.length})`:"Status"));
+  const more=el("button","btn sm ghost","Ganzer Plan"); more.onclick=()=>go("plan"); h.appendChild(more);
+  p2.appendChild(h);
+  if(open.length) open.slice(0,7).forEach(s=>p2.appendChild(statusRow(s)));
+  else p2.appendChild(el("div","empty","Nichts überfällig. Alle erfassten Punkte liegen im Intervall."));
+  c.appendChild(p2);
+
+  const sum=S.entries.reduce((a,e)=>a+total(e),0);
+  const first=S.entries.length?S.entries.map(e=>e.date).sort()[0]:null;
+  const months=first?Math.max(1,daysBetween(first,todayISO())/30.44):0;
+  const span=S.vehicle.buyKm?Math.max(1,currentKm()-(+S.vehicle.buyKm)):null;
+  const k=el("div","kpis");
+  k.appendChild(kpi("Gesamt",eur(sum),`${S.entries.length} Einträge`));
+  k.appendChild(kpi("Pro Monat",months?eur(sum/months):"—",first?"seit "+dfmt(first):"noch leer"));
+  k.appendChild(kpi("Je km",span?(sum/span).toFixed(3).replace(".",",")+" €":"—",span?nf(span)+" km":"Kaufstand fehlt"));
+  c.appendChild(k);
+
+  const flagged=WEAKPOINTS.filter(w=>!w.dpfOnly||hasDPF()).filter(w=>["beobachten","defekt"].includes((S.weak[w.id]||{}).status));
+  if(flagged.length){
+    const p3=el("div","panel");
+    const hh=el("div","secthead");
+    hh.appendChild(el("div","lbl","Unter Beobachtung"));
+    const b=el("button","btn sm ghost","Alle Teile"); b.onclick=()=>go("weak"); hh.appendChild(b);
+    p3.appendChild(hh);
+    flagged.forEach(w=>{
+      const s=S.weak[w.id],bad=s.status==="defekt";
+      const r=el("div","row");
+      r.appendChild(el("div","dot "+(bad?"red":"amber")));
+      const m=el("div");
+      m.appendChild(el("div","rname",esc(w.n)));
+      if(s.note) m.appendChild(el("div","rmeta",esc(s.note)));
+      m.appendChild(el("div","rval "+(bad?"red":"amber"),bad?"defekt":"beobachten"));
+      r.appendChild(m); p3.appendChild(r);
+    });
+    c.appendChild(p3);
+  }
+
+  const row=el("div","btnrow");
+  const b1=el("button","btn primary wide","Eintrag hinzufügen"); b1.onclick=()=>sheetEntry(); row.appendChild(b1);
+  c.appendChild(row);
+}
+
+function kpi(t,v,s){ const d=el("div","kpi"); d.appendChild(el("div","lbl",esc(t))); d.appendChild(el("b",null,esc(v))); d.appendChild(el("span",null,esc(s))); return d; }
+
+function pol(cx,cy,r,deg){ const a=(deg-90)*Math.PI/180; return{x:+(cx+r*Math.cos(a)).toFixed(2),y:+(cy+r*Math.sin(a)).toFixed(2)}; }
+function gauge(s){
+  const box=el("div","gaugewrap");
+  const pct=s&&s.known?Math.min(1.15,Math.max(0,s.pct)):0;
+  const A0=220,A1=500,MAX=1.15;   // im Uhrzeigersinn ab 12 Uhr: unten links bis unten rechts
+  const ang=A0+(A1-A0)*Math.min(pct,MAX)/MAX;
+  const col=!s||!s.known?"#4a4d54":s.state==="red"?"var(--red-lit)":s.state==="amber"?"var(--amber)":"var(--ok)";
+  const R=66,cx=100,cy=92;
+  const arc=(f,t,r,w,color)=>{const a=pol(cx,cy,r,f),b=pol(cx,cy,r,t);const lg=Math.abs(t-f)>180?1:0;
+    return `<path d="M${a.x} ${a.y} A${r} ${r} 0 ${lg} 1 ${b.x} ${b.y}" stroke="${color}" stroke-width="${w}" fill="none" stroke-linecap="round"/>`;};
+  let ticks="";
+  for(let i=0;i<=10;i++){
+    const t=A0+(A1-A0)*i/10,o=pol(cx,cy,R-5,t),n=pol(cx,cy,R-(i%5===0?16:11),t);
+    ticks+=`<line x1="${o.x}" y1="${o.y}" x2="${n.x}" y2="${n.y}" stroke="${i>=9?"#c8102e":"#4d5158"}" stroke-width="${i%5===0?2:1.2}"/>`;
+  }
+  const tip=pol(cx,cy,R-17,ang),b1=pol(cx,cy,6,ang+90),b2=pol(cx,cy,6,ang-90);
+  box.innerHTML=`<svg viewBox="0 0 200 180" role="img" aria-label="Intervallanzeige">
+    ${arc(A0,A1,R,7,"#24262b")}
+    ${arc(A0+(A1-A0)*(1/MAX),A1,R,7,"rgba(200,16,46,.5)")}
+    ${pct>0?arc(A0,ang,R,7,col):""}
+    ${ticks}
+    <polygon points="${tip.x},${tip.y} ${b1.x},${b1.y} ${b2.x},${b2.y}" fill="${col}"/>
+    <circle cx="${cx}" cy="${cy}" r="8" fill="#1b1d21" stroke="#3a3d44"/>
+    <text x="100" y="172" text-anchor="middle" fill="${col}" font-family="Roboto Mono,monospace" font-size="27">${s&&s.known?Math.round(pct*100)+"%":"–"}</text>
+  </svg>`;
+  const cap=el("div","gcap");
+  cap.appendChild(el("b",null,esc(s?s.sv.n:"—")));
+  cap.appendChild(el("span",null,s?esc([s.label,s.sub].filter(Boolean).join(" · ")):"Noch keine Stände erfasst"));
+  box.appendChild(cap);
+  return box;
+}
+
+function statusRow(s,opts){
+  const r=el("div","row");
+  r.appendChild(el("div","dot "+s.state));
+  const m=el("div");
+  m.appendChild(el("div","rname",esc(s.sv.n)));
+  const iv=[]; if(s.sv.km) iv.push(nf(s.sv.km)+" km"); if(s.sv.mo) iv.push(s.sv.mo+" Mon.");
+  const meta=[];
+  if(opts&&opts.interval) meta.push("Intervall "+(iv.join(" / ")||"nach Bedarf"));
+  meta.push(s.known?`zuletzt ${nf(s.last.km)} km${s.last.date?", "+dfmt(s.last.date):""}`:"kein Stand hinterlegt");
+  m.appendChild(el("div","rmeta",esc(meta.join(" · "))));
+  const bar=el("div","bar"); const i=el("i");
+  i.style.width=Math.min(100,Math.max(0,s.pct||0)*100)+"%";
+  i.style.background=s.state==="red"?"var(--red)":s.state==="amber"?"var(--amber)":s.state==="ok"?"var(--ok)":"#4a4d54";
+  bar.appendChild(i); m.appendChild(bar);
+  m.appendChild(el("div","rval "+s.state,esc(s.label)+(s.sub?` <i>· ${esc(s.sub)}</i>`:"")));
+  if(opts&&opts.actions){
+    if(s.sv.note) m.appendChild(el("div","rmeta",esc(s.sv.note)));
+    const row=el("div","btnrow"); row.style.marginTop="10px";
+    const b1=el("button","btn sm","Stand setzen"); b1.onclick=()=>sheetBaseline(s.sv); row.appendChild(b1);
+    const b2=el("button","btn sm ghost","Erledigt buchen"); b2.onclick=()=>sheetEntry(null,[s.sv.id],s.sv.n); row.appendChild(b2);
+    if(s.sv.custom){ const b3=el("button","btn sm danger","Löschen");
+      b3.onclick=()=>confirmSheet("Punkt löschen?",s.sv.n,()=>{S.custom=S.custom.filter(x=>x.id!==s.sv.id);save();renderAll();}); row.appendChild(b3); }
+    m.appendChild(row);
+  }
+  r.appendChild(m);
+  return r;
+}
+
+/* ======================= Plan ======================= */
+
+function renderPlan(){
+  const c=$("#v-plan"); c.innerHTML="";
+  const head=el("div","panel");
+  head.appendChild(el("div","hint","Intervalle nach Herstellervorgabe und Praxiswerten für den 1.9 PD-TDI. Jeder Punkt kennt seine Kilometer- und seine Zeitgrenze und zählt ab dem letzten Mal neu. <b style=\"color:var(--ink)\">Erledigt buchen</b> legt den Service ins Scheckheft und startet das Intervall. <b style=\"color:var(--ink)\">Stand setzen</b> trägt nur nach, wann es zuletzt gemacht wurde, ohne Eintrag und ohne Kosten."));
+  const br=el("div","btnrow"); br.style.marginTop="12px";
+  const b=el("button","btn sm","Eigener Punkt"); b.onclick=sheetCustom; br.appendChild(b);
+  head.appendChild(br);
+  c.appendChild(head);
+
+  const groups={};
+  statuses().forEach(s=>(groups[s.sv.cat]=groups[s.sv.cat]||[]).push(s));
+  Object.keys(groups).forEach(cat=>{
+    const p=el("div","panel");
+    p.appendChild(el("div","lbl",esc(cat)));
+    groups[cat].forEach(s=>p.appendChild(statusRow(s,{interval:true,actions:true})));
+    c.appendChild(p);
+  });
+}
+
+/* ======================= Scheckheft ======================= */
+
+function renderLog(){
+  const c=$("#v-log"); c.innerHTML="";
+  const h=el("div","secthead");
+  h.appendChild(el("div","lbl",`Scheckheft · ${S.entries.length} ${S.entries.length===1?"Eintrag":"Einträge"}`));
+  const b=el("button","btn sm primary","Neu"); b.onclick=()=>sheetEntry(); h.appendChild(b);
+  c.appendChild(h);
+
+  if(!S.entries.length){
+    const e0=el("div","empty");
+    e0.innerHTML=`<div style="font-size:15px;color:var(--ink);margin-bottom:8px">So läuft es</div>
+      Du trägst ein: <b style="color:var(--ink)">Ölwechsel, 180.000 km</b> und hakst „Motoröl + Ölfilter“ an.<br>
+      Die App merkt sich das Datum und den Stand und meldet sich bei 195.000 km oder nach zwölf Monaten von selbst wieder.<br><br>
+      Jeder Eintrag bleibt dauerhaft im Heft stehen — mit Datum, Kilometerstand und Kosten.`;
+    c.appendChild(e0);
+    return;
+  }
+  [...S.entries].sort((a,b)=>String(b.date).localeCompare(a.date)||b.km-a.km).forEach(e=>{
+    const d=el("div","paper");
+    const ph=el("div","ph");
+    const st=el("div","stamp");
+    st.appendChild(el("b",null,dfmt(e.date)));
+    st.appendChild(el("span",null,nf(e.km)+" km"));
+    ph.appendChild(st);
+    const mid=el("div"); mid.style.minWidth="0";
+    mid.appendChild(el("h4",null,esc(e.title||"Eintrag")));
+    const sub=[e.cat,e.shop].filter(Boolean).join(" · ");
+    if(sub) mid.appendChild(el("div","sub",esc(sub)));
+    ph.appendChild(mid);
+    const cost=el("div","cost",eur(total(e)));
+    const detail=[(+e.costParts||0)?"Teile "+eur(e.costParts):"",(+e.costLabor||0)?"Lohn "+eur(e.costLabor):""].filter(Boolean).join(" · ");
+    if(detail) cost.appendChild(el("span",null,esc(detail)));
+    ph.appendChild(cost);
+    d.appendChild(ph);
+    if(e.note) d.appendChild(el("div","note",esc(e.note)));
+    const names=(e.services||[]).map(svName).filter(Boolean);
+    if(names.length){ const t=el("div","ptags"); names.forEach(n=>t.appendChild(el("span","ptag",esc(n)))); d.appendChild(t); }
+    const acts=el("div","pacts");
+    const be=el("button",null,"Bearbeiten"); be.onclick=()=>sheetEntry(e); acts.appendChild(be);
+    const bd=el("button","del","Löschen");
+    bd.onclick=()=>confirmSheet("Eintrag löschen?",`${e.title} · ${dfmt(e.date)}`,()=>{S.entries=S.entries.filter(x=>x.id!==e.id);save();renderAll();toast("Eintrag gelöscht.");});
+    acts.appendChild(bd);
+    d.appendChild(acts);
+    c.appendChild(d);
+  });
+}
+
+/* ======================= Teile / Schwachstellen ======================= */
+
+function renderWeak(){
+  const c=$("#v-weak"); c.innerHTML="";
+  const p0=el("div","panel");
+  p0.appendChild(el("div","lbl","Typische Schwachstellen"));
+  p0.appendChild(el("div","hint","Auf den Golf V mit 1.9 PD-TDI zugeschnitten. Setz den Status, dann erscheinen auffällige Teile auf dem Kombi-Bildschirm. Die Preise sind grobe Richtwerte, keine Angebote."));
+  c.appendChild(p0);
+
+  const order={defekt:0,beobachten:1,"":2,ok:3,erledigt:4};
+  const list=WEAKPOINTS.filter(w=>!w.dpfOnly||hasDPF())
+    .sort((a,b)=>(order[(S.weak[a.id]||{}).status||""]-order[(S.weak[b.id]||{}).status||""])||(b.sev-a.sev));
+
+  list.forEach(w=>{
+    const cur=S.weak[w.id]||{status:"",note:""};
+    const d=el("div","wp");
+    const hd=el("div","wh");
+    const left=el("div"); left.style.minWidth="0";
+    left.appendChild(el("h4",null,esc(w.n)));
+    hd.appendChild(left);
+    hd.appendChild(el("span","sev s"+w.sev,w.sev===3?"kritisch":w.sev===2?"wichtig":"im Blick"));
+    d.appendChild(hd);
+    d.appendChild(el("div","sym",esc(w.sym)));
+    d.appendChild(el("div","hint",esc(w.hint)));
+
+    const f=el("div"); f.style.cssText="display:flex;flex-direction:column;gap:9px;margin-top:11px";
+    const sel=el("select");
+    [["","Status wählen"],["ok","in Ordnung"],["beobachten","beobachten"],["defekt","defekt, Handlungsbedarf"],["erledigt","erledigt / erneuert"]]
+      .forEach(([v,t])=>{ const o=el("option",null,t); o.value=v; if(v===cur.status)o.selected=true; sel.appendChild(o); });
+    sel.onchange=()=>{ S.weak[w.id]={...(S.weak[w.id]||{}),status:sel.value}; save(); renderTop(); renderDash(); };
+    f.appendChild(sel);
+    const inp=el("input"); inp.type="text"; inp.value=cur.note||"";
+    inp.placeholder="Notiz, etwa: leichtes Poltern links vorn seit 10/26";
+    inp.onchange=()=>{ S.weak[w.id]={...(S.weak[w.id]||{}),note:inp.value}; save(); renderDash(); };
+    f.appendChild(inp);
+    const b=el("button","btn sm ghost","Reparatur buchen");
+    b.onclick=()=>sheetEntry(null,[],w.n,"Reparatur");
+    f.appendChild(b);
+    d.appendChild(f);
+    c.appendChild(d);
+  });
+}
+
+/* ======================= Kosten ======================= */
+
+function renderCost(){
+  const c=$("#v-cost"); c.innerHTML="";
+  if(!S.entries.length){ c.appendChild(el("div","empty","Sobald Einträge da sind, rechnet die App hier Gesamt-, Jahres- und Kilometerkosten aus.")); return; }
+  const sum=S.entries.reduce((a,e)=>a+total(e),0);
+  const parts=S.entries.reduce((a,e)=>a+(+e.costParts||0),0);
+  const labor=S.entries.reduce((a,e)=>a+(+e.costLabor||0),0);
+  const first=S.entries.map(e=>e.date).sort()[0];
+  const months=Math.max(1,daysBetween(first,todayISO())/30.44);
+  const span=S.vehicle.buyKm?Math.max(1,currentKm()-(+S.vehicle.buyKm)):null;
+
+  const k1=el("div","kpis");
+  k1.appendChild(kpi("Gesamt",eur(sum),"seit "+dfmt(first)));
+  k1.appendChild(kpi("Teile",eur(parts),sum?Math.round(parts/sum*100)+" %":""));
+  k1.appendChild(kpi("Lohn",eur(labor),sum?Math.round(labor/sum*100)+" %":""));
+  c.appendChild(k1);
+  const k2=el("div","kpis"); k2.style.marginTop="10px";
+  k2.appendChild(kpi("Monat",eur(sum/months),"Durchschnitt"));
+  k2.appendChild(kpi("Jahr",eur(sum/months*12),"hochgerechnet"));
+  k2.appendChild(kpi("Je km",span?(sum/span).toFixed(3).replace(".",",")+" €":"—",span?nf(span)+" km":"Kaufstand fehlt"));
+  c.appendChild(k2);
+
+  c.appendChild(bars("Nach Kategorie",S.entries.reduce((o,e)=>{const k=e.cat||"Sonstiges";o[k]=(o[k]||0)+total(e);return o;},{}),(a,b)=>b[1]-a[1]));
+  c.appendChild(bars("Nach Jahr",S.entries.reduce((o,e)=>{const k=String(e.date).slice(0,4);o[k]=(o[k]||0)+total(e);return o;},{}),(a,b)=>b[0].localeCompare(a[0])));
+
+  const p=el("div","panel"); p.style.marginTop="12px";
+  p.appendChild(el("div","lbl","Teuerste Posten"));
+  [...S.entries].sort((a,b)=>total(b)-total(a)).slice(0,6).forEach(e=>{
+    const r=el("div","row");
+    r.appendChild(el("div","dot grey"));
+    const m=el("div");
+    m.appendChild(el("div","rname",esc(e.title)));
+    m.appendChild(el("div","rmeta",`${dfmt(e.date)} · ${nf(e.km)} km${e.cat?" · "+esc(e.cat):""}`));
+    m.appendChild(el("div","rval",eur(total(e))));
+    r.appendChild(m); p.appendChild(r);
+  });
+  c.appendChild(p);
+}
+function bars(title,obj,sorter){
+  const p=el("div","panel"); p.style.marginTop="12px";
+  p.appendChild(el("div","lbl",esc(title)));
+  const max=Math.max(...Object.values(obj),1);
+  Object.entries(obj).sort(sorter).forEach(([k,v])=>{
+    const r=el("div","cbar");
+    r.appendChild(el("div",null,esc(k)));
+    r.appendChild(el("div","n",eur(v)));
+    const t=el("div","t"); const i=el("i"); i.style.width=(v/max*100)+"%"; t.appendChild(i); r.appendChild(t);
+    p.appendChild(r);
+  });
+  return p;
+}
+
+/* ======================= Fahrzeug ======================= */
+
+function renderVeh(){
+  const c=$("#v-veh"); c.innerHTML="";
+  const v=S.vehicle,e=ENGINES[v.engine]||{};
+
+  const p=el("div","panel");
+  p.appendChild(el("div","lbl","Stammdaten"));
+  const st=el("div","stack");
+  st.appendChild(fld("Bezeichnung","text","name"));
+  st.appendChild(pair(fld("Kennzeichen","text","plate"),engSel()));
+  st.appendChild(pair(fld("Erstzulassung","month","firstReg"),fld("Getriebe","text","gearbox")));
+  st.appendChild(pair(fld("Kilometerstand","number","km"),fld("Stand vom","date","kmDate")));
+  st.appendChild(pair(fld("Fahrleistung pro Jahr","number","annualKm"),fld("Farbe","text","color")));
+  st.appendChild(fld("FIN","text","vin"));
+  st.appendChild(pair(fld("Gekauft am","date","buyDate"),fld("km beim Kauf","number","buyKm")));
+  st.appendChild(fld("Kaufpreis in €","number","buyPrice"));
+  p.appendChild(st);
+  c.appendChild(p);
+
+  const age=ageYears();
+  const p2=el("div","panel");
+  p2.appendChild(el("div","lbl","Technische Daten"));
+  const t=el("table","specs");
+  [["Motor",`1.9 TDI, Pumpe-Düse${e.dpf?", mit DPF":""}`],
+   ["Hubraum","1.896 cm³, 4 Zylinder"],
+   ["Leistung",`${e.kw||77} kW / ${e.ps||105} PS`],
+   ["Drehmoment",`${e.nm||250} Nm ab ca. 1.900 /min`],
+   ["Bauzeit Motorcode",e.years||"—"],
+   ["Abgasnachbehandlung",e.dpf?"Partikelfilter ab Werk":"ohne DPF"],
+   ["Ölspezifikation",e.dpf?"VW 507.00, 5W-30":"VW 505.01, 5W-40"],
+   ["Ölmenge","ca. 4,3 l inkl. Filter"],
+   ["Kühlmittel","G12++ / G13, ca. 6,5 l"],
+   ["Tankinhalt","55 l"],
+   ["Zahnriemen","spätestens 120.000 km bzw. 6 Jahre"],
+   ["Getriebe",v.gearbox||"5-Gang Schaltgetriebe"],
+   ["Leergewicht","ca. 1.320–1.400 kg"],
+   ["Reifen","195/65 R15 · 205/55 R16"],
+   ["Reifendruck","ca. 2,2 bar vorn / 2,0 bar hinten"],
+   ["Batterie","61–72 Ah"],
+   ["Fahrzeugalter",age?age.toFixed(1).replace(".",",")+" Jahre":"—"],
+   ["Laufleistung",nf(currentKm())+" km"],
+   ["Ø Laufleistung/Jahr",age?nf(currentKm()/age)+" km":"—"]
+  ].forEach(([a,b])=>{ const tr=el("tr"); tr.appendChild(el("td",null,esc(a))); tr.appendChild(el("td",null,esc(b))); t.appendChild(tr); });
+  p2.appendChild(t);
+  p2.appendChild(el("div","hint","Serienwerte der Baureihe. Verbindlich sind Türholm-Aufkleber und Fahrzeugpapiere."));
+  c.appendChild(p2);
+
+  const p3=el("div","panel");
+  p3.appendChild(el("div","lbl","Daten sichern"));
+  p3.appendChild(el("div","hint","Die App speichert auf diesem Gerät. Zieh dir regelmäßig eine Sicherung, besonders bevor du das Handy wechselst."));
+  const br=el("div","btnrow"); br.style.marginTop="12px";
+  const b1=el("button","btn","Exportieren"); b1.onclick=doExport; br.appendChild(b1);
+  const b2=el("button","btn","Importieren"); b2.onclick=doImport; br.appendChild(b2);
+  const b3=el("button","btn danger","Zurücksetzen");
+  b3.onclick=()=>confirmSheet("Alles zurücksetzen?","Alle Einträge, Stände und Notizen werden gelöscht.",()=>{S=structuredClone(DEFAULT);S.vehicle.kmDate=todayISO();save();renderAll();toast("Zurückgesetzt.");});
+  br.appendChild(b3);
+  p3.appendChild(br);
+  c.appendChild(p3);
+}
+function fld(label,type,key){
+  const l=el("label","f"); l.appendChild(el("span",null,esc(label)));
+  const i=el("input"); i.type=type; i.id="veh-"+key;
+  if(type==="number"){ i.className="n"; i.inputMode="numeric"; }
+  i.value=S.vehicle[key]??"";
+  i.onchange=()=>{ S.vehicle[key]=type==="number"?(+i.value||0):i.value; save(); renderTop(); };
+  l.appendChild(i); return l;
+}
+function engSel(){
+  const l=el("label","f"); l.appendChild(el("span",null,"Motorcode"));
+  const s=el("select"); s.id="veh-engine";
+  Object.keys(ENGINES).forEach(k=>{ const o=el("option",null,`${k} — ${ENGINES[k].ps} PS${ENGINES[k].dpf?", DPF":""}`); o.value=k;
+    if(k===S.vehicle.engine)o.selected=true; s.appendChild(o); });
+  s.onchange=()=>{ S.vehicle.engine=s.value; save(); renderAll(); };
+  l.appendChild(s); return l;
+}
+function pair(a,b){ const d=el("div","pair"); d.appendChild(a); d.appendChild(b); return d; }
+
+/* ======================= Sheets ======================= */
+
+function openSheet(html){
+  const s=$("#sheet"); s.innerHTML='<div class="grab"></div>'+html;
+  $("#scrim").classList.add("open");
+  requestAnimationFrame(()=>s.classList.add("open"));
+  s.scrollTop=0;
+}
+function closeSheet(){ $("#sheet").classList.remove("open"); $("#scrim").classList.remove("open"); }
+$("#scrim").onclick=closeSheet;
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeSheet(); });
+
+function confirmSheet(title,detail,onYes){
+  openSheet(`<h3>${esc(title)}</h3><div class="hint">${esc(detail)}</div>
+    <div class="foot"><button class="btn ghost" id="cNo">Abbrechen</button><button class="btn primary" id="cYes">Löschen</button></div>`);
+  $("#cNo").onclick=closeSheet;
+  $("#cYes").onclick=()=>{ closeSheet(); onYes(); };
+}
+
+/* Stichwörter, über die ein getippter Titel den passenden Wartungspunkt findet. */
+const MATCH={
+  oil:["ölwechsel","motoröl","ölfilter","oelwechsel","motoroel"],
+  belt:["zahnriemen","wasserpumpe","spannrolle","umlenkrolle"],
+  auxbelt:["keilrippenriemen","keilriemen","nebenaggregat"],
+  fuelfilter:["kraftstofffilter","dieselfilter","spritfilter"],
+  airfilter:["luftfilter"],
+  cabin:["innenraumfilter","pollenfilter","innenraum"],
+  brakefluid:["bremsflüssigkeit","bremsfluessigkeit"],
+  padsF:["beläge vorn","belaege vorn","bremsbeläge vorn","klötze vorn"],
+  discF:["scheiben vorn","bremsscheiben vorn"],
+  padsR:["beläge hinten","belaege hinten","bremsbeläge hinten"],
+  gearoil:["getriebeöl","getriebeoel"],
+  coolant:["kühlmittel","kuehlmittel","frostschutz","kühlflüssigkeit"],
+  glow:["glühkerze","gluehkerze"],
+  egr:["agr","ansaugbrücke","ansaugbruecke"],
+  dpf:["dpf","partikelfilter","rußfilter","russfilter"],
+  hu:["tüv","tuev","hauptuntersuchung","abgasuntersuchung"],
+  inspect:["inspektion"],
+  battery:["batterie","starterbatterie"],
+  tires:["reifen","profil","dot"],
+  wheels:["räderwechsel","radwechsel","reifenwechsel","sommerräder","winterräder","sommerreifen","winterreifen"],
+  chassis:["querlenker","koppelstange","fahrwerk","spurstange","traggelenk"],
+  rust:["rost","unterboden","bremsleitung","konservierung"],
+  drains:["wasserkasten","ablauf","abläufe"],
+  ac:["klima","trockner","kältemittel"],
+  wiper:["wischer","wischerblatt","scheibenwischer"]
+};
+function suggestServices(title){
+  const t=" "+title.toLowerCase().replace(/[-+/]/g," ")+" ";
+  const out=[];
+  allServices().forEach(sv=>{
+    const keys=MATCH[sv.id];
+    if(!keys) return;
+    if(keys.some(k=>k.length<=3?new RegExp("(^|\\s)"+k+"(\\s|$)").test(t):t.includes(k))) out.push(sv.id);
+  });
+  return out;
+}
+
+function sheetEntry(ex,preIds,preTitle,preCat){
+  const e=ex||{id:null,date:todayISO(),km:currentKm(),title:preTitle||"",cat:preCat||"Wartung",
+               costParts:"",costLabor:"",shop:"",note:"",services:preIds||[]};
+  const svs=allServices();
+  openSheet(`
+    <h3>${ex?"Eintrag bearbeiten":"Neuer Eintrag"}</h3>
+    <div class="stack">
+      <div class="pair">
+        <label class="f"><span>Datum</span><input type="date" id="fDate" value="${esc(e.date)}"></label>
+        <label class="f"><span>Kilometerstand</span><input type="number" inputmode="numeric" class="n" id="fKm" value="${esc(e.km)}"></label>
+      </div>
+      <label class="f"><span>Was wurde gemacht?</span><input type="text" id="fTitle" value="${esc(e.title)}" placeholder="Ölwechsel mit Filter" autocomplete="off"></label>
+
+      <div class="svbox">
+        <div class="svhead">
+          <span class="lbl">Welcher Service war das?</span>
+          <button type="button" class="btn sm ghost" id="fClear">Keiner</button>
+        </div>
+        <div class="hint">Angehakte Punkte starten ihr Intervall ab diesem Kilometerstand neu. Die App meldet sich dann von selbst wieder.</div>
+        <div class="prev" id="fPrev"></div>
+        <input type="search" id="fFilter" placeholder="Suchen, etwa: Öl, Bremse, TÜV" autocomplete="off" style="margin-top:12px">
+        <div class="chips clip" id="fChips" style="margin-top:10px">${
+          svs.map(s=>`<label class="chip" data-n="${esc(s.n.toLowerCase())}"><input type="checkbox" value="${esc(s.id)}"${(e.services||[]).includes(s.id)?" checked":""}>${esc(s.n)}</label>`).join("")
+        }</div>
+        <button type="button" class="btn sm ghost wide" id="fMore" style="margin-top:9px">Alle ${svs.length} Punkte anzeigen</button>
+      </div>
+
+      <div class="pair">
+        <label class="f"><span>Kategorie</span><select id="fCat">${CATS.map(c=>`<option${c===e.cat?" selected":""}>${c}</option>`).join("")}</select></label>
+        <label class="f"><span>Wo</span><input type="text" id="fShop" value="${esc(e.shop)}" placeholder="eigene Garage"></label>
+      </div>
+      <div class="pair">
+        <label class="f"><span>Teile in €</span><input type="number" step="0.01" inputmode="decimal" class="n" id="fParts" value="${esc(e.costParts)}"></label>
+        <label class="f"><span>Lohn in €</span><input type="number" step="0.01" inputmode="decimal" class="n" id="fLabor" value="${esc(e.costLabor)}"></label>
+      </div>
+      <label class="f"><span>Notiz</span><textarea id="fNote" placeholder="Teilenummern, Marke, was als Nächstes ansteht">${esc(e.note)}</textarea></label>
+    </div>
+    <div class="foot"><button class="btn ghost" id="eNo">Abbrechen</button><button class="btn primary" id="eYes">Speichern</button></div>`);
+
+  const chips=$("#fChips");
+  const checked=()=>[...chips.querySelectorAll("input:checked")].map(i=>i.value);
+
+  /* Vorschau: was der Eintrag für die nächsten Fälligkeiten bedeutet. */
+  function preview(){
+    const km=+$("#fKm").value||0, date=$("#fDate").value||todayISO();
+    const ids=checked(), box=$("#fPrev");
+    if(!ids.length){
+      box.innerHTML='<div class="prow none">Nichts angehakt — dieser Eintrag startet kein Intervall neu.</div>';
+      return;
+    }
+    box.innerHTML=ids.map(id=>{
+      const sv=svs.find(s=>s.id===id); if(!sv) return "";
+      const bits=[];
+      if(sv.km) bits.push(nf(km+sv.km)+" km");
+      if(sv.mo) bits.push(dfmt(addMonths(date,sv.mo)));
+      return `<div class="prow"><b>${esc(sv.n)}</b><span>${bits.length?"wieder fällig bei "+bits.join(" oder am "):"kein festes Intervall"}</span></div>`;
+    }).join("");
+  }
+
+  /* Titel tippen schlägt Punkte vor; manuelle Haken bleiben unangetastet. */
+  let auto=new Set();
+  function retitle(){
+    const want=new Set(suggestServices($("#fTitle").value));
+    auto.forEach(id=>{ if(!want.has(id)){ const b=chips.querySelector(`input[value="${id}"]`); if(b) b.checked=false; } });
+    want.forEach(id=>{ const b=chips.querySelector(`input[value="${id}"]`); if(b&&!b.checked){ b.checked=true; auto.add(id); } });
+    auto=new Set([...auto].filter(id=>want.has(id)));
+    preview();
+  }
+
+  $("#fTitle").oninput=retitle;
+  $("#fKm").oninput=preview;
+  $("#fDate").onchange=preview;
+  chips.onchange=ev=>{ auto.delete(ev.target.value); preview(); };
+  $("#fClear").onclick=()=>{ chips.querySelectorAll("input:checked").forEach(i=>i.checked=false); auto.clear(); preview(); };
+  $("#fMore").onclick=()=>{
+    const clipped=chips.classList.toggle("clip");
+    $("#fMore").textContent=clipped?`Alle ${svs.length} Punkte anzeigen`:"Weniger anzeigen";
+  };
+  $("#fFilter").oninput=ev=>{
+    const q=ev.target.value.trim().toLowerCase();
+    chips.querySelectorAll(".chip").forEach(c=>{
+      c.hidden = q && !c.dataset.n.includes(q) && !c.querySelector("input").checked;
+    });
+    if(q&&chips.classList.contains("clip")) $("#fMore").click();
+  };
+  preview();
+
+  $("#eNo").onclick=closeSheet;
+  $("#eYes").onclick=()=>{
+    const km=+$("#fKm").value||0;
+    const o={id:e.id||uid(),date:$("#fDate").value||todayISO(),km,
+      title:$("#fTitle").value.trim()||"Eintrag",cat:$("#fCat").value,shop:$("#fShop").value.trim(),
+      costParts:+$("#fParts").value||0,costLabor:+$("#fLabor").value||0,note:$("#fNote").value.trim(),
+      services:checked()};
+    if(e.id) S.entries=S.entries.map(x=>x.id===e.id?o:x); else S.entries.push(o);
+    if(km>(+S.vehicle.km||0)){ S.vehicle.km=km; S.vehicle.kmDate=o.date; }
+    save(); closeSheet(); renderAll();
+
+    if(o.services.length===1){
+      const sv=svs.find(s=>s.id===o.services[0]);
+      const bits=[]; if(sv.km) bits.push(nf(km+sv.km)+" km"); if(sv.mo) bits.push(dfmt(addMonths(o.date,sv.mo)));
+      toast(bits.length?`${sv.n}: wieder fällig bei ${bits.join(" oder am ")}.`:"Gespeichert.");
+    } else if(o.services.length>1){
+      toast(`${o.services.length} Intervalle neu gestartet.`);
+    } else toast("Gespeichert.");
+  };
+}
+
+function sheetBaseline(sv){
+  const b=S.baselines[sv.id]||{km:currentKm(),date:todayISO()};
+  openSheet(`<h3>Stand: ${esc(sv.n)}</h3>
+    <div class="hint" style="margin-bottom:14px">Wann wurde das zuletzt gemacht? Der Wert ist nur der Startpunkt der Berechnung und taucht nicht in den Kosten auf.</div>
+    <div class="pair">
+      <label class="f"><span>Bei km</span><input type="number" inputmode="numeric" class="n" id="bKm" value="${esc(b.km)}"></label>
+      <label class="f"><span>Am</span><input type="date" id="bDate" value="${esc(b.date)}"></label>
+    </div>
+    <div class="foot">
+      ${S.baselines[sv.id]?'<button class="btn danger" id="bDel">Entfernen</button>':""}
+      <button class="btn ghost" id="bNo">Abbrechen</button><button class="btn primary" id="bYes">Übernehmen</button>
+    </div>`);
+  $("#bNo").onclick=closeSheet;
+  const d=$("#bDel"); if(d) d.onclick=()=>{ delete S.baselines[sv.id]; save(); closeSheet(); renderAll(); };
+  $("#bYes").onclick=()=>{
+    S.baselines[sv.id]={km:+$("#bKm").value||0,date:$("#bDate").value||todayISO()};
+    save(); closeSheet(); renderAll(); toast("Stand gesetzt.");
+  };
+}
+
+function sheetCustom(){
+  openSheet(`<h3>Eigener Wartungspunkt</h3>
+    <div class="stack">
+      <label class="f"><span>Bezeichnung</span><input type="text" id="cN" placeholder="Standheizung warten"></label>
+      <div class="pair">
+        <label class="f"><span>Intervall km</span><input type="number" inputmode="numeric" class="n" id="cKm" placeholder="leer = keins"></label>
+        <label class="f"><span>Intervall Monate</span><input type="number" inputmode="numeric" class="n" id="cMo" placeholder="leer = keins"></label>
+      </div>
+      <label class="f"><span>Kategorie</span><input type="text" id="cCat" value="Eigene"></label>
+      <label class="f"><span>Notiz</span><textarea id="cNote"></textarea></label>
+    </div>
+    <div class="foot"><button class="btn ghost" id="xNo">Abbrechen</button><button class="btn primary" id="xYes">Anlegen</button></div>`);
+  $("#xNo").onclick=closeSheet;
+  $("#xYes").onclick=()=>{
+    const n=$("#cN").value.trim(); if(!n){ toast("Bitte eine Bezeichnung eintragen."); return; }
+    S.custom.push({id:"c-"+uid(),n,km:+$("#cKm").value||null,mo:+$("#cMo").value||null,
+      cat:$("#cCat").value.trim()||"Eigene",note:$("#cNote").value.trim(),custom:true});
+    save(); closeSheet(); renderAll(); toast("Punkt angelegt.");
+  };
+}
+
+function sheetKm(){
+  openSheet(`<h3>Kilometerstand</h3>
+    <div class="pair">
+      <label class="f"><span>Aktuell</span><input type="number" inputmode="numeric" class="n" id="kKm" value="${currentKm()}"></label>
+      <label class="f"><span>Abgelesen am</span><input type="date" id="kDate" value="${todayISO()}"></label>
+    </div>
+    <div class="foot"><button class="btn ghost" id="kNo">Abbrechen</button><button class="btn primary" id="kYes">Übernehmen</button></div>`);
+  $("#kNo").onclick=closeSheet;
+  $("#kYes").onclick=()=>{
+    S.vehicle.km=+$("#kKm").value||0; S.vehicle.kmDate=$("#kDate").value||todayISO();
+    save(); closeSheet(); renderAll(); toast("Kilometerstand übernommen.");
+  };
+}
+
+/* ======================= Export / Import ======================= */
+
+function doExport(){
+  const json=JSON.stringify(S,null,2);
+  let downloaded=false;
+  try{
+    const a=document.createElement("a");
+    a.href=URL.createObjectURL(new Blob([json],{type:"application/json"}));
+    a.download=`golf5-scheckheft-${todayISO()}.json`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+    downloaded=true;
+  }catch(e){}
+  openSheet(`<h3>Sicherung</h3>
+    <div class="hint" style="margin-bottom:12px">${downloaded
+      ? "Falls kein Download gestartet ist, kopier den Text und leg ihn in deinen Notizen ab."
+      : "Downloads sind hier gesperrt. Kopier den Text und leg ihn in deinen Notizen ab."}</div>
+    <label class="f"><span>Daten</span><textarea id="exT" style="min-height:190px;font-family:var(--f-num);font-size:12px">${esc(json)}</textarea></label>
+    <div class="foot"><button class="btn ghost" id="exNo">Schließen</button><button class="btn primary" id="exC">Kopieren</button></div>`);
+  $("#exNo").onclick=closeSheet;
+  $("#exC").onclick=()=>{
+    const t=$("#exT");
+    const done=()=>toast("In die Zwischenablage kopiert.");
+    try{ navigator.clipboard.writeText(t.value).then(done,()=>{t.select();toast("Markiert — jetzt kopieren.");}); }
+    catch(e){ t.select(); toast("Markiert — jetzt kopieren."); }
+  };
+}
+
+function doImport(){
+  openSheet(`<h3>Sicherung einlesen</h3>
+    <div class="hint" style="margin-bottom:12px">Wähl eine Export-Datei oder füg den gesicherten Text ein. Der aktuelle Stand wird dabei ersetzt.</div>
+    <label class="f"><span>Datei</span><input type="file" id="imF" accept="application/json,.json"></label>
+    <label class="f" style="margin-top:12px"><span>oder Text</span><textarea id="imT" style="min-height:150px;font-family:var(--f-num);font-size:12px" placeholder="{ ... }"></textarea></label>
+    <div class="foot"><button class="btn ghost" id="imNo">Abbrechen</button><button class="btn primary" id="imYes">Einlesen</button></div>`);
+  $("#imNo").onclick=closeSheet;
+  const apply=txt=>{
+    try{
+      const o=JSON.parse(txt);
+      if(!o||typeof o!=="object") throw 0;
+      S=Object.assign(structuredClone(DEFAULT),o);
+      if(!S.vehicle.kmDate) S.vehicle.kmDate=todayISO();
+      save(); closeSheet(); renderAll(); toast("Daten eingelesen.");
+    }catch(e){ toast("Das war keine lesbare Sicherung."); }
+  };
+  $("#imF").onchange=()=>{ const f=$("#imF").files[0]; if(!f)return; const r=new FileReader(); r.onload=()=>apply(r.result); r.readAsText(f); };
+  $("#imYes").onclick=()=>{ const t=$("#imT").value.trim(); if(!t){ toast("Datei wählen oder Text einfügen."); return; } apply(t); };
+}
+
+/* ======================= Navigation ======================= */
+
+const VIEWS={dash:renderDash,log:renderLog,plan:renderPlan,weak:renderWeak,cost:renderCost,veh:renderVeh};
+let view="dash";
+function go(v){
+  view=v;
+  Object.keys(VIEWS).forEach(k=>{ $("#v-"+k).hidden=k!==v; });
+  document.querySelectorAll("#tabbar button").forEach(b=>b.setAttribute("aria-selected",String(b.dataset.v===v)));
+  VIEWS[v]();
+  window.scrollTo({top:0,behavior:"instant"});
+}
+document.querySelectorAll("#tabbar button").forEach(b=>{ b.onclick=()=>go(b.dataset.v); });
+$("#odoBtn").onclick=sheetKm;
+$("#addBtn").onclick=()=>sheetEntry();
+$("#hName").parentElement.onclick=()=>go("veh");
+
+function renderAll(){ renderTop(); VIEWS[view](); }
+
+(async()=>{ await load(); renderAll(); })();
+</script>
+
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function () {
+    navigator.serviceWorker.register("sw.js").catch(function () { /* ohne SW laeuft die App weiter, nur nicht offline */ });
+  });
+}
+</script>
+</body>
+</html>

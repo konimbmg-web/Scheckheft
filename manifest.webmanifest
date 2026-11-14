@@ -1,0 +1,19 @@
+{
+  "name": "Golf V Scheckheft",
+  "short_name": "Scheckheft",
+  "description": "Wartungsheft, Serviceintervalle und Kosten für den VW Golf V 1.9 TDI",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#141518",
+  "theme_color": "#1b1d21",
+  "lang": "de",
+  "dir": "ltr",
+  "categories": ["utilities", "productivity"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
